@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import EndlessMode from "./components/EndlessMode";
 import PuzzleMode from "./components/PuzzleMode";
 

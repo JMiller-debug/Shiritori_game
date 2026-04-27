@@ -1,4 +1,3 @@
-import React from "react";
 import { usePuzzleMode } from "../game-logic/usePuzzleMode";
 import { toHiraganaNode } from "../game-logic/syllableMap";
 import { getHiragana } from "../game-logic/dictionary";

@@ -5,7 +5,7 @@ import { getFirstSyllable, getLastSyllable, endsWithN } from "./japaneseUtils";
 export function useEndlessMode() {
 	const [chain, setChain] = useState<string[]>([]);
 	const [error, setError] = useState<string>("");
-	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [isLoading, _setIsLoading] = useState<boolean>(false);
 	const [isGameOver, setIsGameOver] = useState<boolean>(false);
 
 	const submitWord = async (word: string) => {
