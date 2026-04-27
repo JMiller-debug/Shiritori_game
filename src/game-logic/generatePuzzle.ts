@@ -1,19 +1,26 @@
 import { wordsByBridge } from "./dictionary";
+import { syllableToHiragana } from "./syllableMap";
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+/** Returns true if the romaji syllable maps to a single basic hiragana character. */
+const isBasicSyllable = (s: string): boolean => {
+	const h = syllableToHiragana[s.toLowerCase()];
+	return h !== undefined && h.length === 1;
+};
 
 /**
  * Builds a valid sequence of `nodeCount` syllable-nodes where every adjacent
  * pair is guaranteed to have at least one dictionary word bridging them.
- *
- * Uses the wordsByBridge map so each step is an O(1) lookup — no post-hoc
- * filtering or retry loops needed per step.
+ * Nodes are restricted to basic hiragana (no digraphs like きゅ, しゃ, etc.).
  */
 export function generatePuzzleNodes(nodeCount = 6): string[] {
-	// Pre-group bridge keys by their starting syllable for fast traversal
-	const byStart = new Map<string, string[]>(); // start -> ["start:end", ...]
+	const byStart = new Map<string, string[]>();
+
 	for (const key of wordsByBridge.keys()) {
-		const start = key.split(":")[0];
+		const [start, end] = key.split(":");
+		// Both endpoints must be basic single-character hiragana
+		if (!isBasicSyllable(start) || !isBasicSyllable(end)) continue;
 		const arr = byStart.get(start) ?? [];
 		arr.push(key);
 		byStart.set(start, arr);
@@ -34,7 +41,6 @@ export function generatePuzzleNodes(nodeCount = 6): string[] {
 			}
 
 			const next = pick(bridges).split(":")[1];
-			// Avoid back-to-back identical nodes (makes a slot trivially easy)
 			if (next === current) {
 				failed = true;
 				break;
@@ -45,6 +51,6 @@ export function generatePuzzleNodes(nodeCount = 6): string[] {
 		if (!failed && nodes.length === nodeCount) return nodes;
 	}
 
-	// Deterministic fallback
+	// Deterministic fallback (all basic hiragana)
 	return ["sa", "ku", "ra", "go", "ri", "ra"];
 }

@@ -19,7 +19,11 @@ function SyllableNode({ romaji }: { romaji: string }) {
 	);
 }
 
-export default function PuzzleMode() {
+interface PuzzleModeProps {
+	wordCount: 3 | 5;
+}
+
+export default function PuzzleMode({ wordCount }: PuzzleModeProps) {
 	const {
 		nodes,
 		words,
@@ -27,6 +31,7 @@ export default function PuzzleMode() {
 		checkSolution,
 		status,
 		readings,
+		definitions,
 		hints,
 		showHint,
 		inputMode,
@@ -34,19 +39,23 @@ export default function PuzzleMode() {
 		newPuzzle,
 		allSolved,
 		timeElapsed,
-	} = usePuzzleMode(6);
+	} = usePuzzleMode(wordCount + 1);
 
 	return (
 		<div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
 			{/* Header */}
 			<div className="text-center space-y-3">
-				<h2 className="text-2xl font-bold text-gray-800">Puzzle Mode</h2>
+				<div className="flex items-center justify-center gap-3">
+					<h2 className="text-2xl font-bold text-gray-800">Puzzle Mode</h2>
+					<span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+						{wordCount} words
+					</span>
+				</div>
 				<p className="text-gray-500">
 					Connect the nodes. Each word must start and end with the shown
 					syllables.
 				</p>
 
-				{/* Input mode toggle */}
 				<div className="inline-flex items-center gap-3 select-none">
 					<span
 						className={`text-sm font-medium ${inputMode === "romaji" ? "text-indigo-700" : "text-gray-400"}`}
@@ -55,15 +64,11 @@ export default function PuzzleMode() {
 					</span>
 					<button
 						onClick={toggleInputMode}
-						className={`relative w-12 h-6 rounded-full transition-colors ${
-							inputMode === "hiragana" ? "bg-indigo-600" : "bg-gray-300"
-						}`}
+						className={`relative w-12 h-6 rounded-full transition-colors ${inputMode === "hiragana" ? "bg-indigo-600" : "bg-gray-300"}`}
 						aria-label="Toggle input mode"
 					>
 						<span
-							className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-								inputMode === "hiragana" ? "translate-x-7" : "translate-x-1"
-							}`}
+							className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${inputMode === "hiragana" ? "translate-x-7" : "translate-x-1"}`}
 						/>
 					</button>
 					<span
@@ -73,7 +78,6 @@ export default function PuzzleMode() {
 					</span>
 				</div>
 
-				{/* Timer */}
 				<div
 					className={`text-3xl font-mono font-bold tracking-widest ${allSolved ? "text-green-600" : "text-indigo-600"}`}
 				>
@@ -85,18 +89,18 @@ export default function PuzzleMode() {
 			<div className="flex flex-col gap-6">
 				{words.map((word, i) => {
 					const hintRomaji = hints[i];
-					// Display hint in the active input mode
 					const hintDisplay = hintRomaji
 						? inputMode === "hiragana"
 							? (getHiragana(hintRomaji) ?? hintRomaji)
 							: hintRomaji
 						: undefined;
 
-					// Placeholder in the active input mode
 					const placeholder =
 						inputMode === "hiragana"
 							? `${toHiraganaNode(nodes[i])}…${toHiraganaNode(nodes[i + 1])}`
 							: `${nodes[i]}…${nodes[i + 1]}`;
+
+					const def = definitions[i];
 
 					return (
 						<div key={i} className="flex items-start gap-4">
@@ -120,9 +124,24 @@ export default function PuzzleMode() {
 
 								{/* Hint */}
 								{hintDisplay ? (
-									<p className="text-sm text-amber-600 font-medium pl-1">
-										💡 {hintDisplay}
-									</p>
+									<div className="flex items-center gap-2 pl-1">
+										<p className="text-sm text-amber-600 font-medium">
+											💡 {hintDisplay}
+										</p>
+										<button
+											onClick={() =>
+												updateWord(
+													i,
+													inputMode === "hiragana"
+														? (getHiragana(hintRomaji!) ?? hintRomaji!)
+														: hintRomaji!,
+												)
+											}
+											className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 font-semibold px-2 py-0.5 rounded transition-colors"
+										>
+											Use
+										</button>
+									</div>
 								) : (
 									status[i] !== "valid" && (
 										<button
@@ -134,11 +153,23 @@ export default function PuzzleMode() {
 									)
 								)}
 
-								{/* Reading — shown when valid; flips based on mode */}
-								{status[i] === "valid" && readings[i] && (
-									<p className="text-sm text-green-700 font-medium pl-1">
-										{readings[i]} ✓
-									</p>
+								{/* Valid: reading + definition */}
+								{status[i] === "valid" && (
+									<div className="pl-1 space-y-0.5">
+										{readings[i] && (
+											<p className="text-sm text-green-700 font-medium">
+												{def?.kanji
+													? `${def.kanji} (${readings[i]})`
+													: readings[i]}{" "}
+												✓
+											</p>
+										)}
+										{def?.gloss && (
+											<p className="text-sm text-gray-500 italic">
+												{def.gloss}
+											</p>
+										)}
+									</div>
 								)}
 
 								{status[i] === "invalid_syllable" && (

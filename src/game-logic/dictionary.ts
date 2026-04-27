@@ -1,60 +1,73 @@
 import rawDict from "../assets/dictionary.json";
 import { getFirstSyllable, getLastSyllable, endsWithN } from "./japaneseUtils";
 
-// The file is a flat { hiragana: romaji } object.
-const dict = rawDict as Record<string, string>;
-
-// ─── Core lookup structures (built once at module load) ───────────────────────
-const romajiSet = new Set<string>();
-const romajiToHiragana = new Map<string, string>();
-
-// Katakana block: ゠ (U+30A0) – ヿ (U+30FF)
-const containsKatakana = (str: string) => /[\u30A0-\u30FF]/.test(str);
-
-for (const [hiragana, romaji] of Object.entries(dict)) {
-	if (containsKatakana(hiragana)) continue; // ← drop katakana words
-	const normalized = romaji.trim().toLowerCase();
-	romajiSet.add(normalized);
-	if (!romajiToHiragana.has(normalized)) {
-		romajiToHiragana.set(normalized, hiragana);
-	}
+interface DictEntry {
+	romaji: string;
+	gloss?: string;
+	kanji?: string;
 }
 
-/** hiragana → romaji, for validating and reading hiragana-mode input */
+export interface WordDefinition {
+	gloss?: string;
+	kanji?: string;
+}
+
+const dict = rawDict as unknown as Record<string, DictEntry>;
+
+// ─── Core lookup structures ───────────────────────────────────────────────────
+const romajiSet = new Set<string>();
+const romajiToHiragana = new Map<string, string>();
+const hiraganaToEntry = new Map<string, DictEntry>();
+
+const containsKatakana = (str: string) => /[\u30A0-\u30FF]/.test(str);
+
+for (const [hiragana, entry] of Object.entries(dict)) {
+	if (containsKatakana(hiragana)) continue;
+	const romaji = entry.romaji.trim().toLowerCase();
+	romajiSet.add(romaji);
+	if (!romajiToHiragana.has(romaji)) {
+		romajiToHiragana.set(romaji, hiragana);
+	}
+	hiraganaToEntry.set(hiragana, entry);
+}
+
+/** hiragana → romaji, for validating hiragana-mode input */
 export const hiraganaDict = new Map<string, string>(
-	Object.entries(dict).map(([h, r]) => [h, r.trim().toLowerCase()]),
+	[...hiraganaToEntry.entries()].map(([h, e]) => [h, e.romaji]),
 );
 
-/** Returns true if the hiragana string is a known noun in the dictionary. */
 export const isValidHiraganaWord = (word: string): boolean =>
-	hiraganaDict.has(word);
+	hiraganaToEntry.has(word);
 
-export const isValidJapaneseWord = (word: string): boolean => {
-	return romajiSet.has(word.trim().toLowerCase());
-};
+export const isValidJapaneseWord = (word: string): boolean =>
+	romajiSet.has(word.trim().toLowerCase());
+
+export const getHiragana = (romaji: string): string | undefined =>
+	romajiToHiragana.get(romaji.trim().toLowerCase());
 
 /**
- * Returns the hiragana reading for a romaji word, or undefined if not found.
- * Useful for showing furigana / hints in the UI.
+ * Returns the English gloss and kanji form for a word.
+ * Accepts either romaji or hiragana input.
  */
-export const getHiragana = (romaji: string): string | undefined => {
-	return romajiToHiragana.get(romaji.trim().toLowerCase());
+export const getDefinition = (input: string): WordDefinition | undefined => {
+	// Try direct hiragana lookup first
+	const byHiragana = hiraganaToEntry.get(input);
+	if (byHiragana) return { gloss: byHiragana.gloss, kanji: byHiragana.kanji };
+
+	// Fall back to romaji → hiragana → entry
+	const hiragana = romajiToHiragana.get(input.trim().toLowerCase());
+	if (hiragana) {
+		const entry = hiraganaToEntry.get(hiragana);
+		if (entry) return { gloss: entry.gloss, kanji: entry.kanji };
+	}
+
+	return undefined;
 };
 
-/** Total number of words loaded — handy for a debug banner. */
 export const dictionarySize = romajiSet.size;
 
-/**
- * Words grouped by their first syllable.
- * Used by the puzzle generator to build valid node chains.
- */
+// ─── Puzzle structures ────────────────────────────────────────────────────────
 export const wordsByFirstSyllable = new Map<string, string[]>();
-
-/**
- * Words grouped by "firstSyllable:lastSyllable" bridge key.
- * Guarantees puzzle solvability and powers the hint system.
- * e.g. wordsByBridge.get("sa:ra") → ["sakura", "samura", ...]
- */
 export const wordsByBridge = new Map<string, string[]>();
 
 for (const romaji of romajiSet) {
@@ -62,12 +75,10 @@ for (const romaji of romajiSet) {
 	const last = getLastSyllable(romaji);
 	if (!first) continue;
 
-	// wordsByFirstSyllable
 	const fBucket = wordsByFirstSyllable.get(first) ?? [];
 	fBucket.push(romaji);
 	wordsByFirstSyllable.set(first, fBucket);
 
-	// wordsByBridge — skip words that end with n (game-over in shiritori)
 	if (!last || endsWithN(romaji)) continue;
 	const key = `${first}:${last}`;
 	const bBucket = wordsByBridge.get(key) ?? [];

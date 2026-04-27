@@ -3,8 +3,10 @@ import {
 	isValidJapaneseWord,
 	isValidHiraganaWord,
 	getHiragana,
+	getDefinition,
 	hiraganaDict,
 	wordsByBridge,
+	type WordDefinition,
 } from "./dictionary";
 import {
 	getFirstSyllable,
@@ -19,7 +21,6 @@ export type NodeStatus = "idle" | "valid" | "invalid_syllable" | "invalid_word";
 export type InputMode = "romaji" | "hiragana";
 
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
 const emptyArr = (n: number) => Array(n).fill(undefined);
 
 export function usePuzzleMode(nodeCount = 6) {
@@ -35,6 +36,9 @@ export function usePuzzleMode(nodeCount = 6) {
 	const [readings, setReadings] = useState<(string | undefined)[]>(() =>
 		emptyArr(nodeCount - 1),
 	);
+	const [definitions, setDefinitions] = useState<
+		(WordDefinition | undefined)[]
+	>(() => emptyArr(nodeCount - 1));
 	const [hints, setHints] = useState<(string | undefined)[]>(() =>
 		emptyArr(nodeCount - 1),
 	);
@@ -59,7 +63,6 @@ export function usePuzzleMode(nodeCount = 6) {
 		setTimeElapsed(0);
 	};
 
-	// ── Input mode toggle ──────────────────────────────────────────────────────
 	const toggleInputMode = () =>
 		setInputMode((m) => (m === "romaji" ? "hiragana" : "romaji"));
 
@@ -81,19 +84,24 @@ export function usePuzzleMode(nodeCount = 6) {
 			n[index] = undefined;
 			return n;
 		});
+		setDefinitions((prev) => {
+			const n = [...prev];
+			n[index] = undefined;
+			return n;
+		});
 	};
 
 	// ── Validation ─────────────────────────────────────────────────────────────
 	const checkSolution = () => {
 		const newStatus: NodeStatus[] = [];
 		const newReadings: (string | undefined)[] = [];
+		const newDefinitions: (WordDefinition | undefined)[] = [];
 
 		for (let i = 0; i < words.length; i++) {
 			const word = words[i].trim();
 			const start = nodes[i];
 			const end = nodes[i + 1];
 
-			// Try romaji match
 			const romajiSyllablesOk =
 				!!word &&
 				getFirstSyllable(word) === start &&
@@ -109,38 +117,41 @@ export function usePuzzleMode(nodeCount = 6) {
 			if (!syllablesOk) {
 				newStatus.push("invalid_syllable");
 				newReadings.push(undefined);
+				newDefinitions.push(undefined);
 				continue;
 			}
 
-			// Syllables match — now check the dictionary
 			const romajiInDict = romajiSyllablesOk && isValidJapaneseWord(word);
 			const hiraganaInDict = hiraganaValid && isValidHiraganaWord(word);
 
 			if (romajiInDict || hiraganaInDict) {
 				newStatus.push("valid");
-				newReadings.push(
-					romajiInDict ? getHiragana(word) : hiraganaDict.get(word),
-				);
+				const hiragana = romajiInDict ? getHiragana(word) : word;
+				newReadings.push(romajiInDict ? hiragana : hiraganaDict.get(word));
+				newDefinitions.push(getDefinition(word));
 			} else {
 				newStatus.push("invalid_word");
 				newReadings.push(undefined);
+				newDefinitions.push(undefined);
 			}
 		}
 
 		setStatus(newStatus);
 		setReadings(newReadings);
+		setDefinitions(newDefinitions);
 		if (newStatus.every((s) => s === "valid")) stopTimer();
 	};
 
 	// ── Hints ──────────────────────────────────────────────────────────────────
-	/** Reveals one valid answer for slot `index` (always stored as romaji). */
 	const showHint = (index: number) => {
 		const candidates =
 			wordsByBridge.get(`${nodes[index]}:${nodes[index + 1]}`) ?? [];
 		if (!candidates.length) return;
+		const sorted = [...candidates].sort((a, b) => a.length - b.length);
+		const pool = sorted.slice(0, Math.max(5, Math.ceil(sorted.length * 0.33)));
 		setHints((prev) => {
 			const n = [...prev];
-			n[index] = pick(candidates);
+			n[index] = pick(pool);
 			return n;
 		});
 	};
@@ -153,6 +164,7 @@ export function usePuzzleMode(nodeCount = 6) {
 		setWords(Array(nodeCount - 1).fill(""));
 		setStatus(Array(nodeCount - 1).fill("idle"));
 		setReadings(emptyArr(nodeCount - 1));
+		setDefinitions(emptyArr(nodeCount - 1));
 		setHints(emptyArr(nodeCount - 1));
 	};
 
@@ -165,6 +177,7 @@ export function usePuzzleMode(nodeCount = 6) {
 		checkSolution,
 		status,
 		readings,
+		definitions,
 		hints,
 		showHint,
 		inputMode,

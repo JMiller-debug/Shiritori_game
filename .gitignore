@@ -27,3 +27,4 @@ dist-ssr
 venv/
 *.py
 jmdict-eng-*
+.vercel

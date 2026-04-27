@@ -1,0 +1,102 @@
+{
+    "id": "1002870",
+    "kanji": [],
+    "kana": [
+        {
+            "common": false,
+            "text": "かっか",
+            "tags": [],
+            "appliesToKanji": [
+                "*"
+            ]
+        },
+        {
+            "common": false,
+            "text": "カッカ",
+            "tags": [],
+            "appliesToKanji": [
+                "*"
+            ]
+        }
+    ],
+    "sense": [
+        {
+            "partOfSpeech": [
+                "vs",
+                "adv-to",
+                "adv"
+            ],
+            "appliesToKanji": [
+                "*"
+            ],
+            "appliesToKana": [
+                "*"
+            ],
+            "related": [],
+            "antonym": [],
+            "field": [],
+            "dialect": [],
+            "misc": [
+                "on-mim"
+            ],
+            "info": [],
+            "languageSource": [],
+            "gloss": [
+                {
+                    "lang": "eng",
+                    "gender": null,
+                    "type": null,
+                    "text": "to burn hotly"
+                },
+                {
+                    "lang": "eng",
+                    "gender": null,
+                    "type": null,
+                    "text": "to burn redly"
+                }
+            ]
+        },
+        {
+            "partOfSpeech": [
+                "vs",
+                "adv-to",
+                "adv"
+            ],
+            "appliesToKanji": [
+                "*"
+            ],
+            "appliesToKana": [
+                "*"
+            ],
+            "related": [],
+            "antonym": [],
+            "field": [],
+            "dialect": [],
+            "misc": [
+                "on-mim"
+            ],
+            "info": [],
+            "languageSource": [],
+            "gloss": [
+                {
+                    "lang": "eng",
+                    "gender": null,
+                    "type": null,
+                    "text": "to lose one's temper"
+                },
+                {
+                    "lang": "eng",
+                    "gender": null,
+                    "type": null,
+                    "text": "to get mad"
+                },
+                {
+                    "lang": "eng",
+                    "gender": null,
+                    "type": null,
+                    "text": "to be upset"
+                }
+            ]
+        }
+    ]
+},
