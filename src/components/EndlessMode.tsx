@@ -1,6 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useEndlessMode } from "../game-logic/useEndlessMode";
-import { getLastSyllable } from "../game-logic/japaneseUtils";
+import { getLastSyllable, getLastMora } from "../game-logic/japaneseUtils";
+import { syllableToHiragana } from "../game-logic/syllableMap";
+
+const isHiraganaStr = (s: string) => /[\u3040-\u309F]/.test(s);
+
+const getLastMoraOf = (word: string): string => {
+	if (isHiraganaStr(word)) return getLastMora(word);
+	const syl = getLastSyllable(word);
+	return syllableToHiragana[syl] ?? syl;
+};
 
 export default function EndlessMode() {
 	const { chain, submitWord, error, isLoading, isGameOver, resetGame } =
@@ -21,10 +30,10 @@ export default function EndlessMode() {
 	const getPlaceholderText = () => {
 		if (isGameOver) return "Game Over!";
 		if (chain.length > 0) {
-			const lastSyllable = getLastSyllable(chain[chain.length - 1]);
-			return `Starts with "${lastSyllable}"...`;
+			const mora = getLastMoraOf(chain[chain.length - 1]);
+			return `${mora}から始まる言葉…`;
 		}
-		return "Enter a romaji word (e.g. sakura)...";
+		return "ひらがなで入力（例：さくら）…";
 	};
 
 	return (
@@ -41,7 +50,7 @@ export default function EndlessMode() {
 			<div className="h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50 flex flex-col gap-2">
 				{chain.length === 0 ? (
 					<p className="text-gray-400 italic text-center mt-auto mb-auto">
-						Type a romaji word to start!
+						ひらがなで入力してください！
 					</p>
 				) : (
 					chain.map((word, idx) => (

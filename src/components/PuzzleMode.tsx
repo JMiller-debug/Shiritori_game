@@ -56,25 +56,29 @@ export default function PuzzleMode({ wordCount }: PuzzleModeProps) {
 					syllables.
 				</p>
 
-				<div className="inline-flex items-center gap-3 select-none">
-					<span
-						className={`text-sm font-medium ${inputMode === "romaji" ? "text-indigo-700" : "text-gray-400"}`}
-					>
-						Romaji
-					</span>
-					<button
-						onClick={toggleInputMode}
-						className={`relative w-12 h-6 rounded-full transition-colors ${inputMode === "hiragana" ? "bg-indigo-600" : "bg-gray-300"}`}
-						aria-label="Toggle input mode"
-					>
-						<span
-							className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${inputMode === "hiragana" ? "translate-x-7" : "translate-x-1"}`}
-						/>
-					</button>
+				<div className="flex items-center justify-center gap-3 select-none">
 					<span
 						className={`text-sm font-medium ${inputMode === "hiragana" ? "text-indigo-700" : "text-gray-400"}`}
 					>
 						ひらがな
+					</span>
+					<button
+						onClick={toggleInputMode}
+						className={`relative w-12 h-6 rounded-full overflow-hidden transition-colors ${
+							inputMode === "romaji" ? "bg-indigo-600" : "bg-gray-300"
+						}`}
+						aria-label="Toggle input mode"
+					>
+						<span
+							className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+								inputMode === "romaji" ? "translate-x-6" : "translate-x-0"
+							}`}
+						/>
+					</button>
+					<span
+						className={`text-sm font-medium ${inputMode === "romaji" ? "text-indigo-700" : "text-gray-400"}`}
+					>
+						Romaji
 					</span>
 				</div>
 

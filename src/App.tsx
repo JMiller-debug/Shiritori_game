@@ -1,17 +1,23 @@
 import { useState } from "react";
 import EndlessMode from "./components/EndlessMode";
 import PuzzleMode from "./components/PuzzleMode";
+import EnglishPuzzleMode from "./components/EnglishPuzzleMode";
 
 type GameMode = "menu" | "endless" | "puzzle-select" | "puzzle";
+type PuzzleLanguage = "japanese" | "english";
 
 function App() {
 	const [mode, setMode] = useState<GameMode>("menu");
 	const [puzzleWordCount, setPuzzleWordCount] = useState<3 | 5>(3);
+	const [puzzleLanguage, setPuzzleLanguage] =
+		useState<PuzzleLanguage>("japanese");
 
 	const startPuzzle = (count: 3 | 5) => {
 		setPuzzleWordCount(count);
 		setMode("puzzle");
 	};
+
+	const isJapanese = puzzleLanguage === "japanese";
 
 	return (
 		<div className="min-h-screen bg-gray-100 flex items-center justify-center py-10 px-4">
@@ -49,16 +55,53 @@ function App() {
 					</button>
 
 					<h2 className="text-2xl font-bold text-gray-800">Puzzle Mode</h2>
-					<p className="text-gray-500">How many words do you want to chain?</p>
 
-					<div className="flex gap-4 justify-center pt-2">
+					{/* Language selector */}
+					<div className="flex gap-3">
+						<button
+							onClick={() => setPuzzleLanguage("japanese")}
+							className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all ${
+								isJapanese
+									? "bg-indigo-600 text-white border-indigo-600 shadow-md"
+									: "bg-white text-gray-500 border-gray-200 hover:border-indigo-300"
+							}`}
+						>
+							🇯🇵 Japanese
+						</button>
+						<button
+							onClick={() => setPuzzleLanguage("english")}
+							className={`flex-1 py-3 px-4 rounded-xl font-bold border-2 transition-all ${
+								!isJapanese
+									? "bg-emerald-600 text-white border-emerald-600 shadow-md"
+									: "bg-white text-gray-500 border-gray-200 hover:border-emerald-300"
+							}`}
+						>
+							🇬🇧 English
+						</button>
+					</div>
+
+					<p className="text-gray-400 text-sm -mt-2">
+						{isJapanese
+							? "Connect hiragana syllable nodes with Japanese words."
+							: "Connect letter nodes with English words."}
+					</p>
+
+					<p className="text-gray-500 font-medium">How many words?</p>
+
+					<div className="flex gap-4 justify-center">
 						{([3, 5] as const).map((count) => (
 							<button
 								key={count}
 								onClick={() => startPuzzle(count)}
-								className="flex-1 flex flex-col items-center gap-2 bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-200 hover:border-indigo-500 text-indigo-800 font-bold py-6 px-4 rounded-xl transition-all"
+								className={`flex-1 flex flex-col items-center gap-2 border-2 font-bold py-6 px-4 rounded-xl transition-all ${
+									isJapanese
+										? "bg-indigo-50 hover:bg-indigo-100 border-indigo-200 hover:border-indigo-500 text-indigo-800"
+										: "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 hover:border-emerald-500 text-emerald-800"
+								}`}
 							>
-								<span className="text-4xl font-extrabold text-indigo-600">
+								<span
+									className={`text-4xl font-extrabold ${isJapanese ? "text-indigo-600" : "text-emerald-600"}`}
+								>
 									{count}
 								</span>
 								<span className="text-sm font-semibold">
@@ -93,7 +136,11 @@ function App() {
 					>
 						&larr; Back
 					</button>
-					<PuzzleMode wordCount={puzzleWordCount} />
+					{isJapanese ? (
+						<PuzzleMode wordCount={puzzleWordCount} />
+					) : (
+						<EnglishPuzzleMode wordCount={puzzleWordCount} />
+					)}
 				</div>
 			)}
 		</div>
